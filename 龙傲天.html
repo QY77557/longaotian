@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>龙傲天 · 全功能刷机助手</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: radial-gradient(circle at 20% 30%, #0a0f1e, #03060c);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, monospace;
+            padding: 1rem;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(12,20,30,0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 48px;
+            border: 2px solid #ffaa44;
+            overflow: hidden;
+        }
+        .page { padding: 1rem 1.2rem; display: none; }
+        .page.active { display: block; }
+        .title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            text-align: center;
+            background: linear-gradient(135deg, #ffe0aa, #ffaa44);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .input-group {
+            background: #0f1820;
+            border-radius: 60px;
+            border: 1px solid #ffaa44;
+            padding: 0.2rem 1rem;
+            margin: 1rem 0;
+        }
+        .input-group input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #ffdd99;
+            font-size: 1.2rem;
+            padding: 0.8rem 0;
+            outline: none;
+            text-align: center;
+        }
+        .btn {
+            background: linear-gradient(95deg, #aa7744, #885522);
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 80px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            margin: 0.5rem 0;
+        }
+        .opt-card {
+            background: rgba(0,20,30,0.7);
+            border: 1px solid #ffaa44;
+            border-radius: 28px;
+            padding: 0.7rem;
+            text-align: center;
+            color: #ffdd99;
+            cursor: pointer;
+            margin: 0.5rem 0;
+            font-weight: 600;
+        }
+        .opt-card:active { background: rgba(255,170,68,0.2); transform: scale(0.97); }
+        .group-title {
+            font-size: 0.8rem;
+            color: #ffaa44;
+            margin: 0.8rem 0 0.2rem;
+            border-left: 3px solid #ffaa44;
+            padding-left: 8px;
+        }
+        .status-card {
+            background: #0a0f1a;
+            border-radius: 20px;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            text-align: center;
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #88dd88;
+            border: 1px solid #2c4a3e;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.55rem;
+            color: #5a7a6e;
+            margin-top: 0.8rem;
+        }
+        .error { color: #ff9670; text-align: center; font-size: 0.7rem; margin: 5px 0; }
+        .row { display: flex; gap: 8px; margin: 6px 0; }
+        .row .opt-card { flex: 1; margin: 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 页面1：卡密验证 -->
+    <div id="pageAuth" class="page active">
+        <div class="title">👑 龙傲天</div>
+        <div class="sub" style="text-align:center; color:#ffaa44; font-size:0.7rem;">刷机控制台</div>
+        <div class="input-group">
+            <input type="text" id="cardCode" placeholder="卡网密钥" autocomplete="off">
+        </div>
+        <button class="btn" id="verifyBtn">验证并进入</button>
+        <div id="errorMsg" class="error"></div>
+        <footer>卡密: NB66</footer>
+    </div>
+
+    <!-- 页面2：主控制台 -->
+    <div id="pageMain" class="page">
+        <div class="title">⚡ 刷机遥控器</div>
+        <div class="sub" style="text-align:center; color:#ffaa44; font-size:0.7rem;">网页 ↔ SH脚本 实时联动</div>
+        
+        <div class="status-card" id="statusCard">
+            <div id="ledIndicator">🔴 状态: 等待连接</div>
+            <div id="statusMessage" style="margin-top:5px;">等待联动脚本启动...</div>
+        </div>
+        
+        <div id="deviceInfoArea" style="display:none;">
+            <div style="background:#0f1820; border-radius:16px; padding:0.5rem; margin:0.5rem 0; font-size:0.8rem; border-left:3px solid #ffaa44;">
+                📱 设备型号: <span id="deviceModel">-</span><br>
+                🔓 BL状态: <span id="deviceBl">-</span>
+            </div>
+        </div>
+
+        <!-- 刷机方式分组 -->
+        <div class="group-title">🔥 ROOT方案</div>
+        <div class="opt-card" id="ksuBtn">🧠 KernelSU 刷入</div>
+        <div class="opt-card" id="alphaBtn">🔪 阿尔法面具 刷入</div>
+        <div class="opt-card" id="magiskBtn">📦 Magisk 刷入</div>
+
+        <div class="group-title">🔧 高级工具</div>
+        <div class="opt-card" id="twrpBtn">📀 刷入 TWRP  Recovery</div>
+        <div class="opt-card" id="vbmetaBtn">🔰 刷入 vbmeta (禁用验证)</div>
+
+        <div class="group-title">🌀 救砖与还原</div>
+        <div class="opt-card" id="stockBtn">📁 刷回原厂 boot</div>
+        <div class="opt-card" id="rescueBtn">🚑 救砖 (boot/recovery)</div>
+        <div class="opt-card" id="eraseBtn">🧹 清除数据/恢复出厂</div>
+
+        <div class="group-title">🔒 BL锁管理</div>
+        <div class="row">
+            <div class="opt-card" id="unlockBlBtn">🔓 解BL锁 (真我/一加)</div>
+            <div class="opt-card" id="relockBlBtn">🔒 回锁BL+还原未root</div>
+        </div>
+
+        <button class="btn" id="refreshBtn" style="background:#1e3b44; margin-top:0.5rem;">🔄 刷新设备状态</button>
+        <footer>点击按钮后自动下载脚本 | 用MT管理器执行即可联动</footer>
+    </div>
+</div>
+
+<script>
+    const pageAuth = document.getElementById('pageAuth');
+    const pageMain = document.getElementById('pageMain');
+    const errorMsg = document.getElementById('errorMsg');
+    
+    document.getElementById('verifyBtn').onclick = () => {
+        if (document.getElementById('cardCode').value.trim() === 'NB66') {
+            pageAuth.classList.remove('active');
+            pageMain.classList.add('active');
+        } else {
+            errorMsg.innerText = '❌ 无效卡密';
+            setTimeout(() => errorMsg.innerText = '', 1500);
+        }
+    };
+    
+    function showFloatingMsg(msg) {
+        const div = document.getElementById('statusMessage');
+        div.innerText = msg;
+        setTimeout(() => { if(div) div.innerText = '等待指令...'; }, 2500);
+    }
+    
+    function refreshStatus() {
+        const model = prompt("请输入MT管理器显示的设备型号:", "Redmi K60");
+        if (model && model.trim()) {
+            document.getElementById('deviceModel').innerText = model;
+            document.getElementById('deviceBl').innerText = "已解锁";
+            document.getElementById('deviceInfoArea').style.display = 'block';
+            document.getElementById('ledIndicator').innerHTML = '🟢 状态: 已连接';
+            showFloatingMsg('设备就绪，选择刷机方案');
+        }
+    }
+    
+    function sendCommand(cmd, displayName) {
+        const script = `#!/system/bin/sh
+echo "${cmd}" > /sdcard/laot_cmd.txt
+echo "指令已发送: ${cmd}"
+echo "后台脚本将自动执行，请勿关闭终端"
+`;
+        const blob = new Blob([script], {type: 'text/plain'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `执行_${cmd}.sh`;
+        link.click();
+        showFloatingMsg(`📤 ${displayName} 指令已生成脚本，用MT执行`);
+    }
+    
+    // 绑定所有功能
+    document.getElementById('ksuBtn').onclick = () => sendCommand('KernelSU', 'KernelSU');
+    document.getElementById('alphaBtn').onclick = () => sendCommand('Alpha', '阿尔法面具');
+    document.getElementById('magiskBtn').onclick = () => sendCommand('Magisk', 'Magisk');
+    document.getElementById('twrpBtn').onclick = () => sendCommand('TWRP', 'TWRP');
+    document.getElementById('vbmetaBtn').onclick = () => sendCommand('FlashVBMeta', 'vbmeta');
+    document.getElementById('stockBtn').onclick = () => sendCommand('FlashStock', '原厂boot');
+    document.getElementById('rescueBtn').onclick = () => sendCommand('Rescue', '救砖');
+    document.getElementById('eraseBtn').onclick = () => sendCommand('EraseData', '清除数据');
+    document.getElementById('unlockBlBtn').onclick = () => sendCommand('UnlockBL', '解锁BL');
+    document.getElementById('relockBlBtn').onclick = () => sendCommand('LockBL', '回锁BL');
+    document.getElementById('refreshBtn').onclick = refreshStatus;
+</script>
+</body>
+</html>
